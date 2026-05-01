@@ -40,14 +40,31 @@ export async function GET(req: Request) {
       return NextResponse.json({ messages });
     }
 
-    const conversations = await prisma.message.groupBy({
-      by: ['senderId', 'receiverId'],
+    const conversationsData = await prisma.message.findMany({
       where: {
         OR: [{ senderId: session.user.id }, { receiverId: session.user.id }],
       },
-      _count: true,
-      _max: { createdAt: true },
+      include: {
+        sender: { select: { id: true, username: true, firstName: true, lastName: true, avatar: true } },
+        receiver: { select: { id: true, username: true, firstName: true, lastName: true, avatar: true } },
+      },
+      orderBy: { createdAt: 'desc' },
     });
+
+    const conversationMap = new Map();
+    conversationsData.forEach((msg) => {
+      const otherUser = msg.senderId === session.user.id ? msg.receiver : msg.sender;
+      if (!conversationMap.has(otherUser.id)) {
+        conversationMap.set(otherUser.id, {
+          userId: otherUser.id,
+          name: `${otherUser.firstName} ${otherUser.lastName}`,
+          lastMessage: msg.content,
+          createdAt: msg.createdAt,
+        });
+      }
+    });
+
+    const conversations = Array.from(conversationMap.values());
 
     return NextResponse.json({ conversations });
   } catch (error) {

@@ -10,9 +10,11 @@ const requiredEnvVars = [
 ];
 
 const optionalEnvVars = [
-  'REDIS_URL',
-  'REDIS_TOKEN',
+  'UPSTASH_REDIS_REST_URL',
+  'UPSTASH_REDIS_REST_TOKEN',
   'NEXT_PUBLIC_APP_URL',
+  'RESEND_API_KEY',
+  'EMAIL_FROM',
 ];
 
 export function validateEnv() {
@@ -41,7 +43,5 @@ export function validateEnv() {
   }
 }
 
-// Validate on module load
-if (process.env.NODE_ENV !== 'test') {
-  validateEnv();
-}
+// Removed top-level validation to prevent build-time failures
+// validateEnv is now called lazily by service clients

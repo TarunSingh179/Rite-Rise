@@ -13,14 +13,14 @@ Complete these steps to deploy your College Network to production.
 
 ### 1.1 Neon.tech Database
 - [ ] Go to https://neon.tech and create account
-- [ ] Create new PostgreSQL project
-- [ ] Copy connection string (looks like: `postgresql://user:password@host.neon.tech/database`)
+- [ ] Create new PostgreSQL project (Your project: **wispy-mode-74369383**)
+- [ ] Copy connection string (looks like: `postgresql://user:password@host.neon.tech/database?sslmode=require`)
 - [ ] Save it securely (you'll need this in Step 2)
 
-### 1.2 Upstash Redis
+### 1.2 Upstash Redis (Optional)
 - [ ] Go to https://upstash.com and create account
-- [ ] Create new Redis database (free tier)
-- [ ] Copy REDIS_URL and access token
+- [ ] Create new Redis database (Your ID: **ff562034-8d18-47ed-9ba5-50ac990d875c**)
+- [ ] Copy the **REST URL** and **REST Token** from the Upstash dashboard
 - [ ] Save them securely
 
 ---
@@ -31,7 +31,6 @@ Complete these steps to deploy your College Network to production.
 ```bash
 npm install
 ```
-This installs the new `redis` package.
 
 ### 2.2 Configure Environment Variables
 1. Copy `.env.example` to `.env.local`
@@ -42,8 +41,8 @@ cp .env.example .env.local
 2. Update `.env.local` with your credentials:
 ```env
 DATABASE_URL="your_neon_connection_string"
-REDIS_URL="your_upstash_redis_url"
-REDIS_TOKEN="your_upstash_token"
+UPSTASH_REDIS_REST_URL="your_upstash_rest_url"
+UPSTASH_REDIS_REST_TOKEN="your_upstash_rest_token"
 NEXTAUTH_SECRET="your-secret-key-generate-with-openssl"
 NEXTAUTH_URL="http://localhost:3000"
 ```
@@ -57,7 +56,7 @@ openssl rand -base64 32
 ```bash
 npm run db:push
 ```
-This verifies your DATABASE_URL is correct.
+This verifies your `DATABASE_URL` is correct.
 
 ### 2.4 Test Build Locally
 ```bash
@@ -73,18 +72,21 @@ Visit http://localhost:3000 to verify everything works.
 ### 3.1 Connect Repository to Vercel
 1. Go to https://vercel.com/new
 2. Select your GitHub repository
-3. Click "Import"
+3. Select your project (Your project: **rite-rise1**)
+4. Click "Import"
 
 ### 3.2 Configure Environment Variables in Vercel
 In the "Environment Variables" section, add:
 
-| Name | Value |
-|------|-------|
-| `DATABASE_URL` | Your Neon connection string |
-| `REDIS_URL` | Your Upstash Redis URL |
-| `REDIS_TOKEN` | Your Upstash token |
-| `NEXTAUTH_SECRET` | Generate new: `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | `https://your-vercel-domain.vercel.app` |
+| Name | Value | Required |
+|------|-------|----------|
+| `DATABASE_URL` | Your Neon connection string | ✅ Yes |
+| `NEXTAUTH_SECRET` | Generate: `openssl rand -base64 32` | ✅ Yes |
+| `NEXTAUTH_URL` | `https://your-vercel-domain.vercel.app` | ✅ Yes |
+| `UPSTASH_REDIS_REST_URL` | Your Upstash REST URL | ❌ Optional |
+| `UPSTASH_REDIS_REST_TOKEN` | Your Upstash REST token | ❌ Optional |
+
+> **⚠️ Important:** Use `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` — not `REDIS_URL`. The REST API is required for Vercel serverless compatibility.
 
 ### 3.3 Deploy
 1. Click "Deploy"
@@ -105,39 +107,37 @@ In the "Environment Variables" section, add:
 1. In Vercel dashboard: Settings > Domains
 2. Add your custom domain
 3. Update DNS records as instructed
+4. Update `NEXTAUTH_URL` in Vercel to match your custom domain
 
-### 4.2 Setup Production Database
-1. In Neon dashboard: Create a production branch (separate from dev)
-2. Update `NEXTAUTH_URL` in Vercel to match your domain
-
-### 4.3 Monitor
+### 4.2 Monitor
 - [ ] Check Vercel logs for errors
 - [ ] Monitor Neon database usage
-- [ ] Monitor Upstash Redis commands
+- [ ] Monitor Upstash Redis commands (if configured)
 
 ---
 
 ## Troubleshooting
 
 ### Database connection fails
-- ✅ Verify DATABASE_URL in Vercel environment variables
-- ✅ Check Neon.tech IP whitelist settings
+- ✅ Verify `DATABASE_URL` in Vercel environment variables
 - ✅ Ensure URL has `?sslmode=require` suffix
+- ✅ Check Neon project is active and not suspended
 
-### Redis not connecting (If used)
-- ✅ Verify REDIS_URL and REDIS_TOKEN are correct
+### Redis not connecting
+- ✅ Verify `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are correct
 - ✅ Check Upstash dashboard for rate limiting
-- ✅ Ensure Redis commands are under 10k/day limit
+- ✅ Ensure Redis commands are under 10k/day limit on free tier
+- ✅ Redis is optional — the app works without it
 
 ### Build fails on Vercel
 - ✅ Run `npm run build` locally to check errors
-- ✅ Verify all environment variables are set
+- ✅ Verify all required environment variables are set
 - ✅ Check Node.js version compatibility (20+)
 
 ### Authentication not working
-- ✅ Verify NEXTAUTH_SECRET is set in Vercel
-- ✅ Verify NEXTAUTH_URL matches your domain
-- ✅ Check database migrations ran successfully
+- ✅ Verify `NEXTAUTH_SECRET` is set in Vercel
+- ✅ Verify `NEXTAUTH_URL` matches your domain exactly
+- ✅ Check database is synced: `npx prisma db push`
 
 ---
 
@@ -150,7 +150,6 @@ When you exceed free tier limits:
 | **Vercel** | Upgrade to Pro ($20/month) |
 | **Neon** | Buy additional storage ($0.35/GB/month) |
 | **Upstash** | Switch to paid tier ($5/month+) |
-| **Backend** | Migrate API routes to Railway if needed |
 
 ---
 
@@ -168,10 +167,6 @@ npm run db:studio            # Open Prisma Studio GUI
 # Production
 npm run build                # Build for production
 npm start                    # Start production server
-
-# Deployment scripts
-./scripts/deploy.sh          # Full deployment guide (Linux/Mac)
-./scripts/deploy.bat         # Full deployment guide (Windows)
 ```
 
 ---

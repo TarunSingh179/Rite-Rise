@@ -22,13 +22,13 @@ This project uses a modern, free-tier friendly deployment stack optimized for Ne
   - Autoscaling and automatic backups
   - Easy integration with Prisma ORM
 
-### Realtime & Cache Layer (Optional)
+### Cache Layer (Optional)
 - **Platform**: [Upstash](https://upstash.com)
 - **Tier**: Free (10k commands/day)
 - **Benefits**:
-  - Redis-compatible cache
+  - REST-based Redis compatible with serverless
   - Perfect for high-performance data caching
-  - Serverless Redis without managing infrastructure
+  - No infrastructure management needed
 
 ### Backend
 - **Platform**: Vercel API Routes (Native Next.js)
@@ -38,14 +38,16 @@ This project uses a modern, free-tier friendly deployment stack optimized for Ne
   - Scale-to-zero pricing
   - Faster response times with Edge functions
 
-## Recommended Configuration
+## Stack Summary
 
 | Component | Provider | Free Tier | Purpose |
 |-----------|----------|-----------|---------|
 | Frontend | Vercel | ✅ Yes | Next.js deployment |
 | Database | Neon.tech | ✅ Yes (500MB) | PostgreSQL storage |
-| Cache (Opt) | Upstash | ✅ Yes | Redis caching |
+| Cache (Opt) | Upstash | ✅ Yes | REST Redis caching |
 | Backend | Vercel API Routes | ✅ Yes | Serverless API |
+
+---
 
 ## Setup Instructions
 
@@ -59,48 +61,101 @@ git push origin main
 ```
 
 ### 2. Configure Neon Database
-```bash
-# Create account at neon.tech
-# Create a PostgreSQL database
-# Get connection string: postgresql://user:password@host/database
+1. Create an account at [neon.tech](https://neon.tech)
+2. Create a PostgreSQL database
+3. Get connection string (looks like: `postgresql://user:password@host/database?sslmode=require`)
 
-# Set in `.env.local`:
-DATABASE_URL="your_neon_connection_string"
-```
-
-### 3. Set Up Upstash Redis
-```bash
-# Create account at upstash.com
-# Create a Redis database
-# Get connection details
-
-# Set in `.env.local`:
-REDIS_URL="redis://..."
-REDIS_TOKEN="your_token"
-```
+### 3. Set Up Upstash Redis (Optional)
+1. Create an account at [upstash.com](https://upstash.com)
+2. Create a Redis database
+3. Copy the **REST URL** and **REST Token** from the dashboard
 
 ### 4. Environment Variables
-Create `.env.local` in your project root:
-```env
-DATABASE_URL=postgresql://...
-REDIS_URL=redis://...
-NEXTAUTH_SECRET=your_secret
-NEXTAUTH_URL=https://your-domain.vercel.app
-```
+
+Add these in Vercel Dashboard → Settings → Environment Variables:
+
+| Name | Example Value | Required |
+|------|---------------|----------|
+| `DATABASE_URL` | `postgresql://user:pass@host/db?sslmode=require` | ✅ Yes |
+| `NEXTAUTH_SECRET` | Generate: `openssl rand -base64 32` | ✅ Yes |
+| `NEXTAUTH_URL` | `https://your-domain.vercel.app` | ✅ Yes |
+| `UPSTASH_REDIS_REST_URL` | `https://your-redis.upstash.io` | ❌ Optional |
+| `UPSTASH_REDIS_REST_TOKEN` | Your Upstash token | ❌ Optional |
+| `RESEND_API_KEY` | Your Resend API key | ❌ Optional |
+
+> **Important:** Use `UPSTASH_REDIS_REST_URL` (not `REDIS_URL`) — this uses the REST API which works with Vercel serverless.
+
+---
 
 ## Deployment Checklist
 - [ ] Push code to GitHub
 - [ ] Connect repository to Vercel
 - [ ] Create Neon.tech PostgreSQL database
-- [ ] Add DATABASE_URL to Vercel environment variables
-- [ ] Create Upstash Redis instance
-- [ ] Add REDIS_URL to Vercel environment variables
-- [ ] Run migrations: `npx prisma migrate deploy`
-- [ ] Test application at Vercel domain
+- [ ] Add `DATABASE_URL` to Vercel environment variables
+- [ ] Generate a strong `NEXTAUTH_SECRET` with `openssl rand -base64 32`
+- [ ] Add `NEXTAUTH_URL` matching your Vercel domain
+- [ ] (Optional) Create Upstash Redis instance and add credentials
+- [ ] Run migrations: `npx prisma db push`
+- [ ] Verify build succeeds on Vercel
+- [ ] Test application at your Vercel domain
+
+---
+
+## Useful Commands
+
+```bash
+# Local development
+npm run dev                    # Start dev server
+
+# Database management
+npm run db:push              # Sync Prisma schema to DB
+npm run db:migrate           # Create migration
+npm run db:studio            # Open Prisma Studio GUI
+
+# Production
+npm run build                # Build for production
+npm start                    # Start production server
+```
+
+---
 
 ## Scaling Beyond Free Tier
+
 As your project grows, upgrade components individually:
 - **Vercel**: Pro plan ($20/month) for advanced features
 - **Neon**: Paid plans for increased storage (100GB+)
 - **Upstash**: Paid plans for higher command limits
-- **Backend**: Switch to Railway or dedicated server if needed
+
+---
+
+## Troubleshooting
+
+### Database connection fails
+- ✅ Verify `DATABASE_URL` in Vercel environment variables
+- ✅ Check Neon.tech project is active
+- ✅ Ensure URL has `?sslmode=require` suffix
+
+### Redis not connecting
+- ✅ Verify `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are correct
+- ✅ Check Upstash dashboard for rate limiting
+- ✅ Redis is optional — the app works without it
+
+### Build fails on Vercel
+- ✅ Run `npm run build` locally to check errors
+- ✅ Verify all required environment variables are set
+- ✅ Check Node.js version compatibility (20+)
+
+### Authentication not working
+- ✅ Verify `NEXTAUTH_SECRET` is set in Vercel
+- ✅ Verify `NEXTAUTH_URL` matches your actual domain
+- ✅ Check database is synced: `npx prisma db push`
+
+---
+
+## Support
+
+- **Vercel**: https://vercel.com/docs/nextjs
+- **Neon**: https://neon.tech/docs/introduction
+- **Upstash**: https://upstash.com/docs/redis/overall/getstarted
+- **NextAuth**: https://next-auth.js.org/getting-started/introduction
+- **Prisma**: https://www.prisma.io/docs/

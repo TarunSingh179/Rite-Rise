@@ -27,15 +27,7 @@ export default function MessagesPage() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
-  const [isTyping, setIsTyping] = useState(false);
-  const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Remove socket-based typing indicators and replace with generic state
-  const handleTyping = () => {
-    // Disabled for Vercel deployment without Socket.io
-  };
 
   useEffect(() => {
     fetchConversations();
@@ -50,7 +42,6 @@ export default function MessagesPage() {
   useEffect(() => {
     if (selectedUser) {
       fetchMessages(selectedUser);
-      setIsTyping(false);
 
       // Poll for messages every 3 seconds for the active conversation
       const interval = setInterval(() => {
@@ -62,9 +53,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
-
-  // Replaced handleTyping definition is above
+  }, [messages]);
 
   const fetchConversations = async (showLoading = true) => {
     try {
@@ -163,15 +152,12 @@ export default function MessagesPage() {
                         {conversations.find(c => c.userId === selectedUser)?.name.split(' ').map(n => n[0]).join('')}
                       </span>
                     </div>
-                    <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-                      onlineUsers.has(selectedUser) ? 'bg-green-500' : 'bg-gray-300'
-                    }`} />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white bg-gray-300" />
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">
                       {conversations.find(c => c.userId === selectedUser)?.name}
                     </p>
-                    {isTyping && <p className="text-xs text-gray-500 italic">typing...</p>}
                   </div>
                 </div>
                 <button className="p-2 hover:bg-gray-100 rounded-lg">
@@ -205,7 +191,7 @@ export default function MessagesPage() {
                 <input
                   type="text"
                   value={newMessage}
-                  onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }}
+                  onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
                   className="flex-1 px-4 py-2 border rounded-full focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                 />

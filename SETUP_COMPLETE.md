@@ -10,13 +10,13 @@ Everything needed to deploy your College Network to production (Vercel + Neon + 
 | File | Purpose |
 |------|---------|
 | `vercel.json` | Vercel deployment configuration |
-| `.env.example` | Updated with all environment variables |
-| `package.json` | Added `redis` client dependency |
+| `.env.example` | Template with all environment variables |
+| `package.json` | Includes `@upstash/redis` REST client |
 
-### Source Code Additions
+### Source Code
 | File | Purpose |
 |------|---------|
-| `src/lib/redis.ts` | Redis client for Upstash integration |
+| `src/lib/redis.ts` | Upstash Redis REST client (serverless-compatible) |
 | `src/lib/env.ts` | Environment variable validation |
 
 ### Deployment Scripts
@@ -30,7 +30,6 @@ Everything needed to deploy your College Network to production (Vercel + Neon + 
 |------|---------|
 | `DEPLOYMENT.md` | Architecture overview & stack explanation |
 | `DEPLOYMENT_CHECKLIST.md` | **Step-by-step deployment guide** ← START HERE |
-| `QUICKSTART.md` | 5-minute quick reference |
 | `SETUP_COMPLETE.md` | This file |
 
 ---
@@ -41,11 +40,10 @@ Everything needed to deploy your College Network to production (Vercel + Neon + 
 ```bash
 npm install
 ```
-This installs the new `redis` client package.
 
 ### 2. Create External Services
 - **Neon.tech**: https://neon.tech (PostgreSQL database)
-- **Upstash**: https://upstash.com (Redis cache)
+- **Upstash** (Optional): https://upstash.com (Redis cache)
 
 ### 3. Follow the Deployment Checklist
 Open and follow: **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)**
@@ -65,7 +63,7 @@ It covers:
 |-------|---------|------|------|
 | **Frontend** | Vercel | Free | $0/month |
 | **Database** | Neon.tech | Free | $0/month |
-| **Cache/Realtime** | Upstash | Free | $0/month |
+| **Cache** | Upstash (Optional) | Free | $0/month |
 | **Backend** | Vercel API Routes | Free | $0/month |
 | **Total** | — | — | **$0/month** |
 
@@ -87,24 +85,23 @@ It covers:
 college-network/
 ├── src/
 │   ├── lib/
-│   │   ├── redis.ts       ← NEW: Redis client
-│   │   ├── env.ts         ← NEW: Env validation
+│   │   ├── redis.ts       ← Upstash REST client
+│   │   ├── env.ts         ← Env validation
 │   │   ├── auth.ts
 │   │   ├── prisma.ts
 │   │   └── ...
-│   ├── middleware.ts      ✓ Already set up for auth
+│   ├── middleware.ts      ✓ Rate limiting & security headers
 │   └── ...
 ├── scripts/
-│   ├── deploy.sh          ← NEW: Deployment guide (Unix)
-│   └── deploy.bat         ← NEW: Deployment guide (Windows)
+│   ├── deploy.sh          ← Deployment guide (Unix)
+│   └── deploy.bat         ← Deployment guide (Windows)
 ├── prisma/
 │   └── schema.prisma      ✓ PostgreSQL configured
-├── .env.example           ✓ UPDATED: Redis variables added
-├── vercel.json            ← NEW: Vercel config
-├── DEPLOYMENT.md          ← NEW: Architecture
-├── DEPLOYMENT_CHECKLIST.md ← NEW: Step-by-step guide
-├── QUICKSTART.md          ← NEW: Quick reference
-└── package.json           ✓ UPDATED: redis dependency added
+├── .env.example           ✓ All variables documented
+├── vercel.json            ← Vercel config
+├── DEPLOYMENT.md          ← Architecture overview
+├── DEPLOYMENT_CHECKLIST.md ← Step-by-step guide
+└── package.json           ✓ @upstash/redis dependency
 ```
 
 ---
@@ -112,11 +109,11 @@ college-network/
 ## 🚢 Deployment Flow
 
 ```
-1. npm install                     → Install redis client
+1. npm install                     → Install dependencies
 
 2. Create Accounts                 → Get credentials
    - Neon.tech (DATABASE_URL)
-   - Upstash (REDIS_URL, REDIS_TOKEN)
+   - Upstash (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN)
 
 3. Local Testing                   → Verify setup
    - npm run db:push               → Test database
@@ -152,9 +149,9 @@ college-network/
 ✅ Automatic backups
 ✅ SQL Editor in dashboard
 
-### Upstash (Real-time)
-✅ Redis for caching
-✅ Pub/Sub for real-time messaging
+### Upstash (Cache - Optional)
+✅ REST-based Redis (serverless-compatible)
+✅ No TCP connections needed
 ✅ No server management
 ✅ Serverless pricing
 
@@ -169,7 +166,7 @@ college-network/
 → Run `npm run build` locally to debug
 
 **Redis not connecting?**
-→ Verify credentials in `.env.local`
+→ Verify `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in your env vars
 
 ---
 
@@ -177,7 +174,6 @@ college-network/
 
 - [Full Deployment Checklist](DEPLOYMENT_CHECKLIST.md) ⭐ Start here
 - [Architecture Overview](DEPLOYMENT.md)
-- [Quick Reference](QUICKSTART.md)
 - [Vercel Docs](https://vercel.com/docs/nextjs)
 - [Neon Docs](https://neon.tech/docs/introduction)
 - [Upstash Docs](https://upstash.com/docs/redis/overall/getstarted)
