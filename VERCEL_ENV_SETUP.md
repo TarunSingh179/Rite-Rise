@@ -18,7 +18,8 @@ Your app is deployed but needs environment variables configured in Vercel dashbo
 | `NEXTAUTH_SECRET` | `college-connect-secret-key-change-in-production` | Production |
 | `NEXT_PUBLIC_APP_URL` | `https://rite-rise1.vercel.app` | Production |
 | `DATABASE_URL` | Your Neon connection string | Production |
-| `REDIS_URL` | Your Upstash Redis URL (optional) | Production |
+| `UPSTASH_REDIS_REST_URL` | `https://mutual-herring-112054.upstash.io` | Production |
+| `UPSTASH_REDIS_REST_TOKEN` | `gQAAAAAAAbW2AAIgcDE1NDdjMDIzNjNiNjU0NjQ3YmVhYjRlYmE3Zjg2OWE5NQ` | Production |
 
 4. **Redeploy:**
    - After adding variables, go to **Deployments**
